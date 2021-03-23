@@ -38,7 +38,7 @@ def create_app(test_config=None):
                 # return "valid email"
                 v_code = redis_control.generate_vcode(pool, email)
                 autosend_mail.send_email(email, v_code)
-                message = "email successfully sent! >< plz check it in 817 sec"
+                message = "200 - email successfully sent! >< plz check it in 817 sec"
                 return dict(success=True, message=message)
             else:
                 return dict(success=False, message="Invalid email.", errorCode=1)
@@ -68,12 +68,13 @@ def create_app(test_config=None):
                 # return "200"
                 # if pNc.post(c_post, token, conn):
                 if pNc.post(c_post, token):
-                    return dict(success=True, message="Post successfully sent.")
+                    return dict(success=True, message="200 - Post successfully sent.")
                 else:
                     return dict(success=False, message="post error.", errorCode=4)
             else:
                 return dict(success=False, message="Invalid token.", errorCode=3)
 
+    # 楼
     @app.route("/v1/comment", methods=["POST"])
     def comment():
         if request.method == "POST":
@@ -82,14 +83,35 @@ def create_app(test_config=None):
             if gen_token.authentication(token):
                 post_id = request.args.get("post_id")
                 print("post_id is", post_id)
-                p_comment = request.json.get("comment")
-                pNc.comment(p_comment, token, post_id)
-                return dict(success=True, message="Comment successfully sent.")
+                p_comment = request.json.get("content")
+                status = pNc.comment(p_comment, token, post_id)
+                if status == 1:
+                    return dict(success=True, message="200 - Comment successfully sent.")
+                elif status == 2:
+                    return dict(success=False, message="404 - post not found", errorCode=5)
             else:
                 return dict(success=False, message="Invalid token.", errorCode=3)
 
+    # 楼中楼
+    @app.route("/v1/reply", methods=["POST"])
+    def reply():
+        if request.method == "POST":
+            # 先鉴权
+            token = request.json.get("token")
+            if gen_token.authentication(token):
+                comment_id = request.args.get("comment_id")
+                c_comment = request.json.get("content")
+                status = pNc.reply(c_comment, token, comment_id)
+                if status == 1:
+                    return dict(success=True, message="200 - Reply successfully sent.")
+                elif status == 2:
+                    return dict(success=False, message="404 - post not found", errorCode=5)
+                else:
+                    return dict(success=False, message="404 - comment not found", errorCode=6)
+            else:
+                return dict(success=False, message="Invalid token.", errorCode=3)
 
-    @app.route("/v1/post_")
+    @app.route("/v1/view")
     def view_post():
         if request.method == "GET":
             # 先鉴权
