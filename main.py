@@ -74,16 +74,16 @@ def create_app(test_config=None):
             else:
                 return dict(success=False, message="Invalid token.", errorCode=3)
 
-
     @app.route("/v1/comment", methods=["POST"])
     def comment():
         if request.method == "POST":
             # 先鉴权
             token = request.json.get("token")
             if gen_token.authentication(token):
-                post_id = request.args.get("post")
+                post_id = request.args.get("post_id")
+                print("post_id is", post_id)
                 p_comment = request.json.get("comment")
-                pNc.comment(post_id, p_comment)
+                pNc.comment(p_comment, token, post_id)
                 return dict(success=True, message="Comment successfully sent.")
             else:
                 return dict(success=False, message="Invalid token.", errorCode=3)
