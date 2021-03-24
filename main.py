@@ -114,6 +114,7 @@ def create_app(test_config=None):
             else:
                 return dict(success=False, message="Invalid token.", errorCode=3)
 
+    # 首页帖子列表，列出最近20条帖子
     @app.route("/v1/view/all")
     def view_all():
         if request.method == "GET":
@@ -126,12 +127,22 @@ def create_app(test_config=None):
                 return dict(success=False, message="Invalid token.", errorCode=3)
     # @app.route()
 
+    # 测试一下
     @app.route("/v1/test", methods=["POST"])
     def test():
         if request.method == "POST":
             # 先鉴权
             # token = request.json.get("token")
             return "200"
+
+    # 通过链接访问单条帖子，不需要鉴权
+    @app.route("/v1/view")
+    def view_post():
+        if request.method == "GET":
+            post_id = request.args.get("post_id")
+            post = pNc.get_post(post_id)
+            return dict(success=True, message = "200", post=post)
+
 
     # 断开数据库连接
     # mysql_ctrl.exit_db(conn)

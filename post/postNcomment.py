@@ -184,10 +184,40 @@ def get_recent10_post():
         post_dict.update({"id": post[0], "content": post[1], "email": email, "last_upd": post[3]})
         # post_dict["id", "content", "email", "last_upd"] = post[0], post[1], email, str(post[3])
         post_list.append(post_dict)
-
     # print("len", len(post_list))
     conn_p.commit()
     conn_e.commit()
     mysql_pool.close_conn(conn_e, cursor_e)
     mysql_pool.close_conn(conn_p, cursor_p)
     return post_list
+
+
+def get_post(post_id):
+    # 三个表，三个游标
+    conn_po, cursor_po = mysql_pool.create_conn()
+    conn_c, cursor_c = mysql_pool.create_conn()
+    conn_p, cursor_p = mysql_pool.create_conn()
+    post = []
+    # 查找对应post_id的post
+    sql = "SELECT * FROM POST WHERE ID = {}".format(post_id)
+    cursor_po.execute(sql)
+    post_content = cursor_po.fetchall()
+    post.append(post_content)
+    # 查找对应post_id的comment
+    sql = "SELECT * FROM P_COMMENT WHERE POST_ID = {}".format(post_id)
+    cursor_p.execute(sql)
+    comment_content = cursor_p.fetchall()
+    post.append(comment_content)
+    # 查找对应post_id的reply
+    sql = "SELECT * FROM C_COMMENT WHERE POST_ID = {}".format(post_id)
+    reply_content = cursor_c.fetchall()
+    post.append(reply_content)
+    conn_po.commit()
+    conn_c.commit()
+    conn_p.commit()
+    mysql_pool.close_conn(conn_po, cursor_po)
+    mysql_pool.close_conn(conn_c, cursor_c)
+    mysql_pool.close_conn(conn_p, cursor_p)
+    return post
+
+
