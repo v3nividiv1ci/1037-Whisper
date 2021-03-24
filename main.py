@@ -9,6 +9,7 @@ import validation.autosend_email as autosend_mail
 import validation.gen_token as gen_token
 import validation.redis_control as redis_control
 import validation.validate as validate
+import mysql_ctrl.recreate_tbl as recreate_tbl
 
 
 def create_app(test_config=None):
@@ -23,8 +24,10 @@ def create_app(test_config=None):
     pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
     print(pool)
     # 连接数据库mysql
-    # conn = mysql_ctrl.connect_db()
-    # 建立连接池 (这段是我抄的）
+    recreate_tbl.recreate_post()
+    recreate_tbl.recreate_email()
+    recreate_tbl.recreate_c_comment()
+    recreate_tbl.recreate_p_comment()
 
 
     @app.route("/v1/validation")

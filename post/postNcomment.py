@@ -7,10 +7,13 @@ import mysql_ctrl.mysql_pool as mysql_pool
 def email_index(email):
     conn, cursor = mysql_pool.create_conn()
     sql = "SELECT * FROM EMAIL WHERE EMAIL='{}'".format(email)
-    if not cursor.execute(sql):
+    cursor.execute(sql)
+    test = cursor.fetchone()
+    if not test:
         sql = "INSERT INTO EMAIL VALUES(NULL, '{}')".format(email)
         cursor.execute(sql)
     email_id = cursor.lastrowid
+    print("email id is", email_id)
     conn.commit()
     mysql_pool.close_conn(conn, cursor)
     return email_id
@@ -22,6 +25,7 @@ def post(c_post, token):
     conn, cursor= mysql_pool.create_conn()
     # cursor.scroll(0, 'absolute')
     email = jwt.decode(token, config.key, algorithms=['HS256'])['user_email']
+    print(email)
     email_id = email_index(email)
     sql = "INSERT INTO POST VALUES(NULL, NULL, NULL, %s, %s, NOW(), NOW())"
     cursor.execute(sql, (c_post, email_id))
