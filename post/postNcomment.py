@@ -93,6 +93,7 @@ def comment(p_comment, token, post_id):
     mysql_pool.close_conn(conn_p, cursor_p)
     return 1
 
+
 def reply(c_comment, token, comment_id):
     # 三个表，三个游标
     conn_po, cursor_po = mysql_pool.create_conn()
@@ -158,3 +159,31 @@ def reply(c_comment, token, comment_id):
     mysql_pool.close_conn(conn_p, cursor_p)
     return 1
 
+
+def get_recent10_post():
+    conn_p, cursor_p = mysql_pool.create_conn()
+    conn_e, cursor_e = mysql_pool.create_conn()
+    # 反向排序
+    sql = "SELECT ID, POST_CONTENT, EMAIL_ID, LAST_UPD FROM POST ORDER BY LAST_UPD DESC"
+    cursor_p.execute(sql)
+    posts = cursor_p.fetchmany(20)
+    for post in posts:
+        print(post)
+    post_list = []
+    for post in posts:
+        email_id = post[2]
+        sql = "SELECT EMAIL FROM EMAIL WHERE ID = {}".format(email_id)
+        cursor_e.execute(sql)
+        email = cursor_e.fetchone()[0]
+        post_dict = {}
+        # print("post[0],post[1],post[3], email:", post[0], post[1], str(post[3]), email)
+        post_dict.update({"id": post[0], "content": post[1], "email": email, "last_upd": post[3]})
+        # post_dict["id", "content", "email", "last_upd"] = post[0], post[1], email, str(post[3])
+        post_list.append(post_dict)
+
+    # print("len", len(post_list))
+    conn_p.commit()
+    conn_e.commit()
+    mysql_pool.close_conn(conn_e, cursor_e)
+    mysql_pool.close_conn(conn_p, cursor_p)
+    return post_list

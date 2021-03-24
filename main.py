@@ -111,18 +111,16 @@ def create_app(test_config=None):
             else:
                 return dict(success=False, message="Invalid token.", errorCode=3)
 
-    @app.route("/v1/view")
-    def view_post():
+    @app.route("/v1/view/all")
+    def view_all():
         if request.method == "GET":
             # 先鉴权
             token = request.json.get("token")
-            POST_ID = request.args.get("post")
             if gen_token.authentication(token):
-                pass
-                return dict(success=True, message=" ")
+                post_list = pNc.get_recent10_post()
+                return dict(success=True, message="200", posts=post_list)
             else:
-                # 怎么才能不允许非登陆态用户无法显示树洞首页的帖子列表，以及其他后续功能 ？
-                return dict(success=False, message=" .", errorCode=3)
+                return dict(success=False, message="Invalid token.", errorCode=3)
     # @app.route()
 
     @app.route("/v1/test", methods=["POST"])
