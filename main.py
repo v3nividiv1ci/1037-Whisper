@@ -24,10 +24,10 @@ def create_app(test_config=None):
     pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
     print(pool)
     # 连接数据库mysql
-    recreate_tbl.recreate_post()
-    recreate_tbl.recreate_email()
-    recreate_tbl.recreate_c_comment()
-    recreate_tbl.recreate_p_comment()
+    # recreate_tbl.recreate_post()
+    # recreate_tbl.recreate_email()
+    # recreate_tbl.recreate_c_comment()
+    # recreate_tbl.recreate_p_comment()
 
 
     @app.route("/v1/validation")

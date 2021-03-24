@@ -12,8 +12,9 @@ def email_index(email):
     if not test:
         sql = "INSERT INTO EMAIL VALUES(NULL, '{}')".format(email)
         cursor.execute(sql)
-    email_id = cursor.lastrowid
-    print("email id is", email_id)
+        email_id = cursor.lastrowid
+    else:
+        email_id = test[0]
     conn.commit()
     mysql_pool.close_conn(conn, cursor)
     return email_id
@@ -202,15 +203,19 @@ def get_post(post_id):
     sql = "SELECT * FROM POST WHERE ID = {}".format(post_id)
     cursor_po.execute(sql)
     post_content = cursor_po.fetchall()
+    print("post_content is", post_content)
     post.append(post_content)
     # 查找对应post_id的comment
     sql = "SELECT * FROM P_COMMENT WHERE POST_ID = {}".format(post_id)
     cursor_p.execute(sql)
     comment_content = cursor_p.fetchall()
+    print("comment_content is", comment_content)
     post.append(comment_content)
     # 查找对应post_id的reply
     sql = "SELECT * FROM C_COMMENT WHERE POST_ID = {}".format(post_id)
+    cursor_c.execute(sql)
     reply_content = cursor_c.fetchall()
+    print("reply_content is:", reply_content)
     post.append(reply_content)
     conn_po.commit()
     conn_c.commit()
