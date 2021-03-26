@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+rsa_keys/*
+
 # C extensions
 *.so
 

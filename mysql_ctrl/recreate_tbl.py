@@ -8,7 +8,7 @@ def recreate_post():
     sql = """CREATE TABLE IF NOT EXISTS `POST`(
         `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
         `POST_CONTENT` VARCHAR(200) NOT NULL,
-	    `EMAIL_CRYPTO` VARCHAR(40) NOT NULL,
+	    `EMAIL_CRYPTO` BLOB,
         `TIME` TIMESTAMP,
         `LAST_UPD` TIMESTAMP,
         PRIMARY KEY ( `ID` )
@@ -24,9 +24,9 @@ def recreate_p_comment():
     sql = """CREATE TABLE IF NOT EXISTS `P_COMMENT`(
         `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
         `COMMENT_CONTENT` VARCHAR(200) NOT NULL,
-	    `EMAIL_CRYPTO` VARCHAR(40) NOT NULL,
+	    `EMAIL_CRYPTO` BLOB,
         `TIME` TIMESTAMP,
-        `Pa = OST_ID` INT UNSIGNED,
+        `POST_ID` INT UNSIGNED,
         PRIMARY KEY ( `ID` )
     )ENGINE=InnoDB DEFAULT CHARSET=utf8;"""
     cursor.execute(sql)
@@ -39,7 +39,7 @@ def recreate_c_comment():
     sql = """CREATE TABLE IF NOT EXISTS `C_COMMENT`(
         `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
         `REPLY_CONTENT` VARCHAR(200) NOT NULL,
-	    `EMAIL_CRYPTO` VARCHAR(40) NOT NULL,
+	    `EMAIL_CRYPTO` BLOB,
         `TIME` TIMESTAMP,
         `COMMENT_ID` INT UNSIGNED,
         `POST_ID` INT UNSIGNED,
@@ -50,7 +50,7 @@ def recreate_c_comment():
     mysql_pool.close_conn(conn, cursor)
 
 
-def blacklist():
+def recreate_blacklist():
     conn, cursor = mysql_pool.create_conn()
     cursor.execute("DROP TABLE IF EXISTS BLACKLIST")
     sql = """CREATE TABLE IF NOT EXISTS `BLACKLIST`(

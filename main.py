@@ -26,9 +26,10 @@ def create_app(test_config=None):
     pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
     print(pool)
     # 连接数据库mysql
-    recreate_tbl.recreate_post()
-    recreate_tbl.recreate_c_comment()
-    recreate_tbl.recreate_p_comment()
+    # recreate_tbl.recreate_post()
+    # recreate_tbl.recreate_c_comment()
+    # recreate_tbl.recreate_p_comment()
+    # recreate_tbl.recreate_blacklist()
 
 
     @app.route("/v1/validation")
@@ -122,7 +123,7 @@ def create_app(test_config=None):
             # 先鉴权
             token = request.json.get("token")
             if gen_token.authentication(token) and not pNc.if_ban(token):
-                post_list = pNc.get_recent10_post()
+                post_list = pNc.get_recent20_post()
                 return dict(success=True, message="200", posts=post_list)
             else:
                 return dict(success=False, message="Invalid token.", errorCode=3)
@@ -134,7 +135,7 @@ def create_app(test_config=None):
             # 先鉴权
             token = request.json.get("token")
             if gen_token.authentication(token) and not pNc.if_ban(token):
-                post_id = request.json.get("post_id")
+                post_id = request.args.get("post_id")
                 pNc.delete(post_id, "POST")
                 return dict(success=True, message="200")
             else:
@@ -147,7 +148,7 @@ def create_app(test_config=None):
             # 先鉴权
             token = request.json.get("token")
             if gen_token.authentication(token) and not pNc.if_ban(token):
-                post_id = request.json.get("comment_id")
+                post_id = request.args.get("comment_id")
                 pNc.delete(post_id, "P_COMMENT")
                 return dict(success=True, message="200")
             else:
@@ -155,12 +156,12 @@ def create_app(test_config=None):
 
     # 删除reply
     @app.route("/v1/delete/reply", methods=["DELETE"])
-    def delete_post():
+    def delete_something():
         if request.method == "DELETE":
             # 先鉴权
             token = request.json.get("token")
             if gen_token.authentication(token) and not pNc.if_ban(token):
-                post_id = request.json.get("reply_id")
+                post_id = request.args.get("reply_id")
                 pNc.delete(post_id, "C_COMMENT")
                 return dict(success=True, message="200")
             else:
@@ -179,8 +180,7 @@ def create_app(test_config=None):
     def ban():
         if request.method == "POST":
             token = request.json.get("token")
-            email = jwt.decode(token, config.key, algorithms=['HS256'])['user_email']
-            if email == "u202013878@hust.edu.cn" or "U202013878@hust.edu.cn":
+            if gen_token.if_admin(token):
                 black_email = request.json.get("black_email")
                 if pNc.ban(black_email):
                     return dict(success=True, message="200")
@@ -194,8 +194,7 @@ def create_app(test_config=None):
     def unban():
         if request.method == "DELETE":
             token = request.json.get("token")
-            email = jwt.decode(token, config.key, algorithms=['HS256'])['user_email']
-            if email == "u202013878@hust.edu.cn" or "U202013878@hust.edu.cn":
+            if gen_token.if_admin(token):
                 unban_id = request.json.get("unban_id")
                 if pNc.ban(unban_id):
                     return dict(success=True, message="200")
@@ -209,3 +208,4 @@ def create_app(test_config=None):
 
 if __name__ == '__main__':
     app = create_app()
+    app.run(debug=True)
