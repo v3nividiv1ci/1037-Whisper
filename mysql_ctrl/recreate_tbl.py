@@ -24,7 +24,7 @@ def recreate_p_comment():
     sql = """CREATE TABLE IF NOT EXISTS `P_COMMENT`(
         `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
         `COMMENT_CONTENT` VARCHAR(200) NOT NULL,
-	    `EMAIL_CRYPTO` BLOB,
+       `EMAIL_CRYPTO` BLOB,
         `TIME` TIMESTAMP,
         `POST_ID` INT UNSIGNED,
         PRIMARY KEY ( `ID` )
@@ -33,13 +33,14 @@ def recreate_p_comment():
     conn.commit()
     mysql_pool.close_conn(conn, cursor)
 
+
 def recreate_c_comment():
     conn, cursor = mysql_pool.create_conn()
     cursor.execute("DROP TABLE IF EXISTS C_COMMENT")
     sql = """CREATE TABLE IF NOT EXISTS `C_COMMENT`(
         `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-        `REPLY_CONTENT` VARCHAR(200) NOT NULL,
-	    `EMAIL_CRYPTO` BLOB,
+        `C_COMMENT_CONTENT` VARCHAR(200) NOT NULL,
+        `EMAIL_CRYPTO` BLOB,
         `TIME` TIMESTAMP,
         `COMMENT_ID` INT UNSIGNED,
         `POST_ID` INT UNSIGNED,
@@ -74,3 +75,22 @@ def recreate_blacklist():
 #     cursor.execute(sql)
 #     conn.commit()
 #     mysql_pool.close_conn(conn, cursor)
+
+def recreate_elective():
+    conn, cursor = mysql_pool.create_conn()
+    cursor.execute("DROP TABLE IF EXISTS ELECTIVE")
+    sql = """CREATE TABLE IF NOT EXISTS `ELECTIVE`(
+        `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+        `SIGN` INT UNSIGNED NOT NULL,
+        `FORM` INT UNSIGNED NOT NULL,
+	    `HW` INT UNSIGNED NOT NULL,
+        `FISH` INT UNSIGNED NOT NULL,
+        `GENERAL` INT UNSIGNED NOT NULL,
+        `COMMENT` VARCHAR(200) NOT NULL,
+        `TIME` TIMESTAMP,
+        `LECTURE` VARCHAR(40) NOT NULL,
+        PRIMARY KEY ( `ID` )
+    )ENGINE=InnoDB DEFAULT CHARSET=utf8;"""
+    cursor.execute(sql)
+    conn.commit()
+    mysql_pool.close_conn(conn, cursor)

@@ -38,7 +38,7 @@ def comment(p_comment, token, post_id):
         mysql_pool.close_conn(conn_p, cursor_p)
         return 2
     # 在回帖表中插入回帖
-    sql = "INSERT INTO P_COMMENT VALUES(NULL, (_binary %s), %s, NOW(), %s)"
+    sql = "INSERT INTO P_COMMENT VALUES(NULL, %s, (_binary %s), NOW(), %s)"
     cursor_c.execute(sql, (p_comment, email_crypto, post_id))
     sql = "UPDATE POST SET LAST_UPD=NOW() WHERE ID={}".format(post_id)
     cursor_p.execute(sql)
@@ -71,7 +71,7 @@ def reply(c_comment, token, comment_id):
         return 2
     # 在楼中楼表中插入楼中楼
     email_crypto = rsa_key.encode_email(email, str(post_id))
-    sql = "INSERT INTO C_COMMENT VALUES(NULL, (_binary %s), %s, NOW(), %s, %s)"
+    sql = "INSERT INTO C_COMMENT VALUES(NULL, %s, (_binary %s), NOW(), %s, %s)"
     cursor_c.execute(sql, (c_comment, email_crypto, comment_id, post_id))
     # 更新POST中对应总帖最后一次更新的时间
     sql = "UPDATE POST SET LAST_UPD=NOW() WHERE ID={}".format(post_id)
@@ -152,9 +152,9 @@ def get_post(post_id):
     return post
 
 
-def delete(id, table_name):
+def delete(id, table_name, column_name):
     conn, cursor = mysql_pool.create_conn()
-    sql = "DELETE FROM " + table_name + " WHERE ID = {}".format(id)
+    sql = "DELETE FROM {0} WHERE {1} = {2}".format(table_name, column_name,  id)
     cursor.execute(sql)
     conn.commit()
     mysql_pool.close_conn(conn, cursor)
@@ -165,32 +165,35 @@ def ban(email):
     conn, cursor = mysql_pool.create_conn()
     id_hash = hash(email[1:10])
     sql = "SELECT * FROM BLACKLIST WHERE EMAIL_HASH = {}".format(id_hash)
+    print(id_hash)
     if cursor.execute(sql):
         conn.commit()
         mysql_pool.close_conn(conn, cursor)
         return False
     else:
-        sql = "INSERT INTO BLACKLIST VALUES(NULL, %s)"
-        cursor.execute(sql, id_hash)
+        sql = "INSERT INTO BLACKLIST VALUES(NULL, {})".format(id_hash)
+        cursor.execute(sql)
         conn.commit()
         mysql_pool.close_conn(conn, cursor)
         return True
 
 
 def unban(id_num):
+
     conn, cursor = mysql_pool.create_conn()
     id_hash = hash(id_num)
+    print(id_hash)
     sql = "SELECT * FROM BLACKLIST WHERE EMAIL_HASH = {}".format(id_hash)
     if cursor.execute(sql):
-        conn.commit()
-        mysql_pool.close_conn(conn, cursor)
-        return False
-    else:
         sql = "DELETE FROM BLACKLIST WHERE EMAIL_HASH = {}".format(id_hash)
         cursor.execute(sql)
         conn.commit()
         mysql_pool.close_conn(conn, cursor)
         return True
+    else:
+        conn.commit()
+        mysql_pool.close_conn(conn, cursor)
+        return False
 
 
 

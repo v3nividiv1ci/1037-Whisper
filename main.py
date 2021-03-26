@@ -10,6 +10,7 @@ import validation.autosend_email as autosend_mail
 import validation.gen_token as gen_token
 import validation.redis_control as redis_control
 import validation.validate as validate
+import love_death_elective.comment_elective as comment_elective
 import mysql_ctrl.recreate_tbl as recreate_tbl
 import config
 
@@ -27,9 +28,11 @@ def create_app(test_config=None):
     print(pool)
     # 连接数据库mysql
     # recreate_tbl.recreate_post()
-    # recreate_tbl.recreate_c_comment()
     # recreate_tbl.recreate_p_comment()
+    # recreate_tbl.recreate_c_comment()
     # recreate_tbl.recreate_blacklist()
+    recreate_tbl.recreate_elective()
+
 
 
     @app.route("/v1/validation")
@@ -136,7 +139,9 @@ def create_app(test_config=None):
             token = request.json.get("token")
             if gen_token.authentication(token) and not pNc.if_ban(token):
                 post_id = request.args.get("post_id")
-                pNc.delete(post_id, "POST")
+                pNc.delete(post_id, "POST", "ID")
+                pNc.delete(post_id, "P_COMMENT", "POST_ID")
+                pNc.delete(post_id, "C_COMMENT", "POST_ID")
                 return dict(success=True, message="200")
             else:
                 return dict(success=False, message="Invalid token.", errorCode=3)
@@ -148,8 +153,9 @@ def create_app(test_config=None):
             # 先鉴权
             token = request.json.get("token")
             if gen_token.authentication(token) and not pNc.if_ban(token):
-                post_id = request.args.get("comment_id")
-                pNc.delete(post_id, "P_COMMENT")
+                comment_id = request.args.get("comment_id")
+                pNc.delete(comment_id, "P_COMMENT", "ID")
+                pNc.delete(comment_id, "C_COMMENT", "COMMENT_ID")
                 return dict(success=True, message="200")
             else:
                 return dict(success=False, message="Invalid token.", errorCode=3)
@@ -161,8 +167,8 @@ def create_app(test_config=None):
             # 先鉴权
             token = request.json.get("token")
             if gen_token.authentication(token) and not pNc.if_ban(token):
-                post_id = request.args.get("reply_id")
-                pNc.delete(post_id, "C_COMMENT")
+                reply_id = request.args.get("reply_id")
+                pNc.delete(reply_id, "C_COMMENT", "ID")
                 return dict(success=True, message="200")
             else:
                 return dict(success=False, message="Invalid token.", errorCode=3)
@@ -196,13 +202,26 @@ def create_app(test_config=None):
             token = request.json.get("token")
             if gen_token.if_admin(token):
                 unban_id = request.json.get("unban_id")
-                if pNc.ban(unban_id):
+                if pNc.unban(unban_id):
                     return dict(success=True, message="200")
                 else:
                     return dict(success=False, message="Already unbanned.")
             else:
                 return dict(success=False, message="Invalid token.", errorCode=3)
 
+    @app.route("/v1/love_death_elective", methods=["POST"])
+    def love_death_elective():
+        if request.method == "POST":
+            # 先鉴权
+            token = request.json.get("token")
+            if gen_token.authentication(token) and not pNc.if_ban(token):
+                lecture = request.args["lecture"]
+                if_sign, test_form, if_hw, if_touch_fish, general, comment =\
+                    request.json["sign"], request.json["test"], request.json["hw"], request.json["fish"], request.json["general"], request.json["comment"]
+                if comment_elective.comment_elective(if_sign, test_form, if_hw, if_touch_fish, lecture, comment, general):
+                    return dict(success=True, message="200")
+            else:
+                return dict(success=False, message="Invalid token.", errorCode=3)
     return app
 
 
