@@ -3,6 +3,7 @@ import os
 import redis
 from flask import Flask
 from flask import request
+import jwt
 
 import post.postNcomment as pNc
 import validation.autosend_email as autosend_mail
@@ -10,6 +11,7 @@ import validation.gen_token as gen_token
 import validation.redis_control as redis_control
 import validation.validate as validate
 import mysql_ctrl.recreate_tbl as recreate_tbl
+import config
 
 
 def create_app(test_config=None):
@@ -24,10 +26,9 @@ def create_app(test_config=None):
     pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
     print(pool)
     # 连接数据库mysql
-    # recreate_tbl.recreate_post()
-    # recreate_tbl.recreate_email()
-    # recreate_tbl.recreate_c_comment()
-    # recreate_tbl.recreate_p_comment()
+    recreate_tbl.recreate_post()
+    recreate_tbl.recreate_c_comment()
+    recreate_tbl.recreate_p_comment()
 
 
     @app.route("/v1/validation")
@@ -65,7 +66,7 @@ def create_app(test_config=None):
             # 先鉴权
             token = request.json.get("token")
             # print(token, flush=True)
-            if gen_token.authentication(token):
+            if gen_token.authentication(token) and not pNc.if_ban(token):
                 c_post = request.json.get("post")
                 print(c_post, flush=True)
                 # return "200"
@@ -83,7 +84,7 @@ def create_app(test_config=None):
         if request.method == "POST":
             # 先鉴权
             token = request.json.get("token")
-            if gen_token.authentication(token):
+            if gen_token.authentication(token) and not pNc.if_ban(token):
                 post_id = request.args.get("post_id")
                 print("post_id is", post_id)
                 p_comment = request.json.get("content")
@@ -101,7 +102,7 @@ def create_app(test_config=None):
         if request.method == "POST":
             # 先鉴权
             token = request.json.get("token")
-            if gen_token.authentication(token):
+            if gen_token.authentication(token) and not pNc.if_ban(token):
                 comment_id = request.args.get("comment_id")
                 c_comment = request.json.get("content")
                 status = pNc.reply(c_comment, token, comment_id)
@@ -120,20 +121,50 @@ def create_app(test_config=None):
         if request.method == "GET":
             # 先鉴权
             token = request.json.get("token")
-            if gen_token.authentication(token):
+            if gen_token.authentication(token) and not pNc.if_ban(token):
                 post_list = pNc.get_recent10_post()
                 return dict(success=True, message="200", posts=post_list)
             else:
                 return dict(success=False, message="Invalid token.", errorCode=3)
-    # @app.route()
 
-    # 测试一下
-    @app.route("/v1/test", methods=["POST"])
-    def test():
-        if request.method == "POST":
+    # 删除post
+    @app.route("/v1/delete/post", methods=["DELETE"])
+    def delete_post():
+        if request.method == "DELETE":
             # 先鉴权
-            # token = request.json.get("token")
-            return "200"
+            token = request.json.get("token")
+            if gen_token.authentication(token) and not pNc.if_ban(token):
+                post_id = request.json.get("post_id")
+                pNc.delete(post_id, "POST")
+                return dict(success=True, message="200")
+            else:
+                return dict(success=False, message="Invalid token.", errorCode=3)
+
+    # 删除comment
+    @app.route("/v1/delete/comment", methods=["DELETE"])
+    def delete_comment():
+        if request.method == "DELETE":
+            # 先鉴权
+            token = request.json.get("token")
+            if gen_token.authentication(token) and not pNc.if_ban(token):
+                post_id = request.json.get("comment_id")
+                pNc.delete(post_id, "P_COMMENT")
+                return dict(success=True, message="200")
+            else:
+                return dict(success=False, message="Invalid token.", errorCode=3)
+
+    # 删除reply
+    @app.route("/v1/delete/reply", methods=["DELETE"])
+    def delete_post():
+        if request.method == "DELETE":
+            # 先鉴权
+            token = request.json.get("token")
+            if gen_token.authentication(token) and not pNc.if_ban(token):
+                post_id = request.json.get("reply_id")
+                pNc.delete(post_id, "C_COMMENT")
+                return dict(success=True, message="200")
+            else:
+                return dict(success=False, message="Invalid token.", errorCode=3)
 
     # 通过链接访问单条帖子，不需要鉴权
     @app.route("/v1/view")
@@ -143,9 +174,36 @@ def create_app(test_config=None):
             post = pNc.get_post(post_id)
             return dict(success=True, message = "200", post=post)
 
+    # 封禁账号
+    @app.route("/v1/ban", methods=["POST"])
+    def ban():
+        if request.method == "POST":
+            token = request.json.get("token")
+            email = jwt.decode(token, config.key, algorithms=['HS256'])['user_email']
+            if email == "u202013878@hust.edu.cn" or "U202013878@hust.edu.cn":
+                black_email = request.json.get("black_email")
+                if pNc.ban(black_email):
+                    return dict(success=True, message="200")
+                else:
+                    return dict(success=False, message="Already banned.")
+            else:
+                return dict(success=False, message="Invalid token.", errorCode=3)
 
-    # 断开数据库连接
-    # mysql_ctrl.exit_db(conn)
+    # 解封账号
+    @app.route("/v1/unban", methods=["DELETE"])
+    def unban():
+        if request.method == "DELETE":
+            token = request.json.get("token")
+            email = jwt.decode(token, config.key, algorithms=['HS256'])['user_email']
+            if email == "u202013878@hust.edu.cn" or "U202013878@hust.edu.cn":
+                unban_id = request.json.get("unban_id")
+                if pNc.ban(unban_id):
+                    return dict(success=True, message="200")
+                else:
+                    return dict(success=False, message="Already unbanned.")
+            else:
+                return dict(success=False, message="Invalid token.", errorCode=3)
+
     return app
 
 

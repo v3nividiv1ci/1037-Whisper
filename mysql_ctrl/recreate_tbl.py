@@ -7,10 +7,8 @@ def recreate_post():
     cursor.execute("DROP TABLE IF EXISTS POST")
     sql = """CREATE TABLE IF NOT EXISTS `POST`(
         `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-        `NEXT_ID` INT UNSIGNED,
-	    `COMMENT_ID` INT UNSIGNED,
         `POST_CONTENT` VARCHAR(200) NOT NULL,
-	    `EMAIL_ID` INT UNSIGNED,
+	    `EMAIL_CRYPTO` VARCHAR(40) NOT NULL,
         `TIME` TIMESTAMP,
         `LAST_UPD` TIMESTAMP,
         PRIMARY KEY ( `ID` )
@@ -25,12 +23,10 @@ def recreate_p_comment():
     cursor.execute("DROP TABLE IF EXISTS P_COMMENT")
     sql = """CREATE TABLE IF NOT EXISTS `P_COMMENT`(
         `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-        `NEXT_ID` INT UNSIGNED,
-	    `P_COMMENT_ID` INT UNSIGNED,
         `COMMENT_CONTENT` VARCHAR(200) NOT NULL,
-	    `EMAIL_ID` INT UNSIGNED,
+	    `EMAIL_CRYPTO` VARCHAR(40) NOT NULL,
         `TIME` TIMESTAMP,
-        `POST_ID` INT UNSIGNED,
+        `Pa = OST_ID` INT UNSIGNED,
         PRIMARY KEY ( `ID` )
     )ENGINE=InnoDB DEFAULT CHARSET=utf8;"""
     cursor.execute(sql)
@@ -42,9 +38,8 @@ def recreate_c_comment():
     cursor.execute("DROP TABLE IF EXISTS C_COMMENT")
     sql = """CREATE TABLE IF NOT EXISTS `C_COMMENT`(
         `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-        `NEXT_ID` INT UNSIGNED,
-        `C_COMMENT_CONTENT` VARCHAR(200) NOT NULL,
-	    `EMAIL_ID` INT UNSIGNED,
+        `REPLY_CONTENT` VARCHAR(200) NOT NULL,
+	    `EMAIL_CRYPTO` VARCHAR(40) NOT NULL,
         `TIME` TIMESTAMP,
         `COMMENT_ID` INT UNSIGNED,
         `POST_ID` INT UNSIGNED,
@@ -54,14 +49,28 @@ def recreate_c_comment():
     conn.commit()
     mysql_pool.close_conn(conn, cursor)
 
-def recreate_email():
+
+def blacklist():
     conn, cursor = mysql_pool.create_conn()
-    cursor.execute("DROP TABLE IF EXISTS EMAIL")
-    sql = """CREATE TABLE IF NOT EXISTS `EMAIL`(
+    cursor.execute("DROP TABLE IF EXISTS BLACKLIST")
+    sql = """CREATE TABLE IF NOT EXISTS `BLACKLIST`(
         `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-        `EMAIL` VARCHAR(40) NOT NULL,
-	    PRIMARY KEY ( `ID` )
+        `EMAIL_HASH` BIGINT(20),
+	    PRIMARY KEY ( `ID`)
     )ENGINE=InnoDB DEFAULT CHARSET=utf8;"""
     cursor.execute(sql)
     conn.commit()
     mysql_pool.close_conn(conn, cursor)
+
+#
+# def admin():
+#     conn, cursor = mysql_pool.create_conn()
+#     cursor.execute("DROP TABLE IF EXISTS ADMINS")
+#     sql = """CREATE TABLE IF NOT EXISTS `ADMINS`(
+#             `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+#             `ADMIN_HASH` VARCHAR(40) NOT NULL,
+#     	    PRIMARY KEY ( `ID` )
+#         )ENGINE=InnoDB DEFAULT CHARSET=utf8;"""
+#     cursor.execute(sql)
+#     conn.commit()
+#     mysql_pool.close_conn(conn, cursor)
